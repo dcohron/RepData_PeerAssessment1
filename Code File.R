@@ -1,23 +1,8 @@
----
-title: "PA1-template.Rmd"
-author: "David N. Cohron"
-date: "January 10, 2016"
-output: html_document
----
-
-# Activity Monitoring Analysis
-## Reproducible Research
-## Johns Hopkins University- Coursera
-## Project #1
+# Course Project #1
+# Reproducible Research
 
 
-###  This project is designed to produce a report from raw data.  Data source is a personal activity monitoring device worn by an anonymous individual for 61 days during October and November 2012 and included the number of steps taken in 5 minute intervals each day.
-
-### Course Assignment:
-1. Code for reading in the dataset and/or processing the data
-
-```{r, echo=TRUE}
-# globally suppress warnings
+# globallye suppress warnings
 oldwarn<- getOption("warn")
 options(warn = -1)
 
@@ -34,12 +19,7 @@ main<- read.csv(file)
 
 # refactor raw date to type date
 main<- mutate(main, date=as.Date(as.character(main$date)))
-```
 
-
-2. Histogram of the total number of steps taken each day
-
-```{r, echo=TRUE}
 # group by days to get sum of steps per day
 # ignore days with no steps recorded
 stepsbyday<- group_by(main, date) %>% summarize_each(funs(sum))
@@ -64,25 +44,7 @@ legend('topright',
        c("mean", "median"), 
        col=c("blue", "red"), 
        lwd=3)
-```
 
-
-3. Mean and median number of steps taken each day
-   Note that the mean and the median are quite close.
-
-```{r, echo=TRUE}
-# calculate mean and median of number of steps per day
-# note: this is already reflected on the histogram
-meansteps<-mean(stepsbyday$steps, na.rm=TRUE)
-meansteps
-mediansteps<- median(stepsbyday$steps, na.rm=TRUE)
-mediansteps
-```
-
-
-4. Time series plot of the average number of steps taken
-
-```{r, echo=TRUE}
 # group by 5 minute interval
 # ignore intervals with no steps recorded
 stepsbyinterval<- group_by(main, interval) %>% summarize_each(funs(mean(., na.rm=TRUE)))
@@ -95,46 +57,27 @@ with(stepsbyinterval, plot(interval, steps,
                            ylab = "Mean Number of Steps",
                            xlim = c(0, 2400),
                            ylim = c(0, 235)))
-```
 
-5. The 5-minute interval that, on average, contains the maximum number of steps
-
-```{r, echo=TRUE}
 # calculate which 5 minute interval has highest average number of steps
 maxintervalrow<- which.max(stepsbyinterval$steps)
 maxinterval<- stepsbyinterval$interval[maxintervalrow]
-maxinterval
-maxavgsteps<- stepsbyinterval$steps[maxintervalrow]
-maxavgsteps
-```
 
-6. Code to describe and show a strategy for imputing missing data
-
-```{r, echo=TRUE}
-# calculate  and report the number of rows with missing (NA) data
+# calculate the number of rows with missing (NA) data
 numrowtotal<- nrow(main)
 numrownona<- nrow(na.omit(main))
 numrowwithna<- numrowtotal - numrownona
-numrowwithna
 
 # impute missing values and replace with interval mean
 impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 mainimputed <- ddply(main, ~ interval, transform, steps = impute.mean(steps))
-```
 
-7. Histogram of the total number of steps taken each day after missing values are imputed
-  Note that the new mean and median are identical once we substituted the median for the interval for all of the missing values.
-
-```{r, echo=TRUE}
 # group new data frame by days to get sum of steps per day
 # all days/intervals have steps recorded
 stepsbyday2<- group_by(mainimputed, date) %>% summarize_each(funs(sum))
 
 # calculate mean and median of number of steps per day
 meansteps2<-mean(stepsbyday2$steps)
-meansteps2
 mediansteps2<- median(stepsbyday2$steps)
-mediansteps2
 
 # plot histogram on imputed data
 hist(stepsbyday2$steps,
@@ -151,12 +94,7 @@ legend('topright',
        c("mean", "median"), 
        col=c("blue", "red"), 
        lwd=3)
-```
 
-
-8. Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
-
-```{r, echo=TRUE}
 # add columns showing day of the week
 stepsbyday3<- mutate(mainimputed, dayofweek = weekdays(date, abbreviate=TRUE))
 
@@ -172,6 +110,7 @@ weekendsteps<- subset(stepsbyday3, weekend)
 #       but it was a requirement of the project
 stepsbyday3$weekend<-factor(stepsbyday3$weekend,levels=c(FALSE, TRUE), labels=c('Weekday', 'Weekend'))
 
+
 #group by date
 weekdaystepsum<- group_by(weekdaysteps, date) %>% summarize_each(funs(sum(steps)))
 weekendstepsum<- group_by(weekendsteps, date) %>% summarize_each(funs(sum(steps)))
@@ -186,7 +125,6 @@ weekdaystepsbyinterval<- group_by(weekdaysteps, interval) %>% summarize_each(fun
 weekendstepsbyinterval<- group_by(weekendsteps, interval) %>% summarize_each(funs(mean(., na.rm=TRUE)))
 
 # plot time series of 5 minute interval average steps for weekday and weekends
-# Note:  I did not try to duplicate the example exactly. I believe this is more clear.
 par(mfrow = c(2,1), height = 500)
 with(weekdaystepsbyinterval, plot(interval, steps, 
                                   type = "l",
@@ -203,11 +141,6 @@ with(weekendstepsbyinterval, plot(interval, steps,
                                   ylab = "Mean Number of Steps",
                                   xlim = c(0, 2400),
                                   ylim = c(0, 235)))
-```
 
-9. All of the R code needed to reproduce the results (numbers, plots, etc.) in the report
-
-```{r, echo=TRUE}
 # restore warnings
 options(warn = oldwarn)
-```
